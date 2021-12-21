@@ -1,0 +1,63 @@
+.root {
+    margin: 0;
+    color: white;
+    -fx-background-color: black;
+    -fx-font-family: 'Open Sans';
+}
+
+.text-field {
+    -fx-text-fill: white;
+}
+
+#passwordTextField, #passwordTextFieldRegister {
+    -fx-font-size: 10px
+}
+
+.button {
+    -fx-background-color: "0037A5";
+    -fx-border-radius: 50px;
+    -fx-background-radius: 50px;
+}
+
+#wrapper #tabs {
+    -fx-text-alignment: center;
+}
+
+#registerForm {
+    animation: fade;
+    animation-direction: alternate;
+}
+
+#tabs {
+    -fx-alignment: center;
+    -fx-spacing: 20px;
+}
+
+#tabs .label {
+    -fx-font-size: 24px;
+    -fx-cursor: hand;
+    letter-spacing: 2px;
+
+}
+
+#tabs .check-box {
+    -fx-font-size: 100px;
+}
+
+#tabs .check-box:selected{
+    -fx-border-style: solid;
+}
+
+#wrapper {
+    -fx-background-image: url("../images/43-436329_blue-purple-gradient-purple-blue-and-green.jpg");
+    -fx-background-size: stretch;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-alignment: center;
+}
+
+.text-field {
+    -fx-border-radius: 50px;
+    -fx-background-color: rgba(255, 255, 255, .1);
+    -fx-background-radius: 50px;
+}
