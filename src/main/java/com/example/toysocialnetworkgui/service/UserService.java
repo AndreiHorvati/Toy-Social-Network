@@ -2,7 +2,7 @@ package com.example.toysocialnetworkgui.service;
 
 import com.example.toysocialnetworkgui.model.User;
 import com.example.toysocialnetworkgui.repository.ExistingUserException;
-import com.example.toysocialnetworkgui.repository.Repository;
+import com.example.toysocialnetworkgui.repository.database.UserDatabaseRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,17 +11,17 @@ import java.util.List;
  * Service-ul care se ocupa de entitatea User
  * Extinde clasa abstracta BasicService
  */
-public class UserService extends BasicService<Long, User> {
+public class UserService {
     private User currentUser;
+    private UserDatabaseRepository repository;
 
     /**
      * Contructorul service-ului
      *
      * @param repository - repository-ul pentru care lucreaza service-ul
      */
-    public UserService(Repository<Long, User> repository) {
-        super(repository);
-
+    public UserService(UserDatabaseRepository repository) {
+        this.repository = repository;
         currentUser = null;
     }
 
@@ -41,14 +41,14 @@ public class UserService extends BasicService<Long, User> {
      * @throws IllegalArgumentException daca firstName sau lastName sunt null
      * @throws ExistingUserException    daca exista deja un utilizator cu acest nume
      */
-    public User save(String firstName, String lastName) {
-        if (firstName == null || lastName == null) {
+    public User save(String firstName, String lastName, String username, String password) {
+        if (firstName == null || lastName == null || username == null || password == null) {
             throw new IllegalArgumentException("Atributele nu pot fi null!");
         }
 
-        User user = new User(firstName, lastName);
+        User user = new User(firstName, lastName, username);
 
-        return repository.save(user);
+        return repository.saveWithPassword(user, password);
     }
 
     /**
@@ -56,7 +56,7 @@ public class UserService extends BasicService<Long, User> {
      *
      * @param firstName - prenumele user-ului
      * @param lastName  - numele user-ului
-     * @throws NonexistentUserException daca nu exista niciun user cu acest nume
+     * @throws NonExistingUserException daca nu exista niciun user cu acest nume
      */
     public void changeCurrentUser(String firstName, String lastName) {
         Long userId = getUserIdByName(firstName, lastName);
@@ -64,7 +64,7 @@ public class UserService extends BasicService<Long, User> {
         try {
             currentUser = findOne(userId);
         } catch (IllegalArgumentException e) {
-            throw new NonexistentUserException("Utilizatorul cautat nu exista!");
+            throw new NonExistingUserException("Utilizatorul cautat nu exista!");
         }
     }
 
@@ -92,7 +92,7 @@ public class UserService extends BasicService<Long, User> {
             String[] userNames = name.split("\\ ");
 
             if (userNames.length == 1) {
-                throw new NonexistentUserException("Utilizatorul cautat nu exista!");
+                throw new NonExistingUserException("Utilizatorul cautat nu exista!");
             }
 
             String userFirstName = userNames[0];
@@ -101,7 +101,7 @@ public class UserService extends BasicService<Long, User> {
             Long userId = getUserIdByName(userFirstName, userLastName);
 
             if (userId == null) {
-                throw new NonexistentUserException("Utilizatorul cautat nu exista!");
+                throw new NonExistingUserException("Utilizatorul cautat nu exista!");
             }
 
             User user = findOne(userId);
@@ -130,7 +130,7 @@ public class UserService extends BasicService<Long, User> {
 
             return user;
         } catch (IllegalArgumentException e) {
-            throw new NonexistentUserException("Utilizatorul cautat nu exista!");
+            throw new NonExistingUserException("Utilizatorul cautat nu exista!");
         }
     }
 
@@ -176,7 +176,7 @@ public class UserService extends BasicService<Long, User> {
      * @param newLastName  - numele nou al utilizatorului
      * @return null daca utilizatorul a fost modificat sau utilizatorul daca nu s-a putut modifica
      */
-    public User update(String oldFirstName, String oldLastName, String newFirstName, String newLastName) {
+    public User update(String oldFirstName, String oldLastName, String oldUsername, String newFirstName, String newLastName) {
         if (newFirstName == null || newLastName == null) {
             throw new IllegalArgumentException("Noile nume nu pot fi null!");
         }
@@ -184,12 +184,20 @@ public class UserService extends BasicService<Long, User> {
         try {
             Long oldUserId = getUserIdByName(oldFirstName, oldLastName);
 
-            User newUser = new User(newFirstName, newLastName);
+            User newUser = new User(newFirstName, newLastName, oldUsername);
             newUser.setId(oldUserId);
 
             return repository.update(newUser);
         } catch (IllegalArgumentException e) {
-            throw new NonexistentUserException("Utilizatorul cautat nu exista!");
+            throw new NonExistingUserException("Utilizatorul cautat nu exista!");
         }
+    }
+
+    public User findOne(Long id) {
+        return repository.findOne(id);
+    }
+
+    public Iterable<User> findAll() {
+        return repository.findAll();
     }
 }

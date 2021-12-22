@@ -14,13 +14,74 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
         super(url, username, password, validator);
     }
 
+    private User getSenderFromResultSet(ResultSet resultSet) {
+        try {
+            Long senderId = resultSet.getLong("sender_id");
+            String senderFirstName = resultSet.getString("sender_first_name");
+            String senderLastName = resultSet.getString("sender_last_name");
+            String senderUsername = resultSet.getString("sender_username");
+            User sender = new User(senderFirstName, senderLastName, senderUsername);
+            sender.setId(senderId);
+
+            return sender;
+        } catch (SQLException throwables) {
+            throw new DatabaseException("Eroare la baza de date!");
+        }
+    }
+
+    private User getReceiverFromResultSet(ResultSet resultSet) {
+        try {
+            Long receiverId = resultSet.getLong("receiver_id");
+            String receiverFirstName = resultSet.getString("receiver_first_name");
+            String receiverLastName = resultSet.getString("receiver_last_name");
+            String receiverUsername = resultSet.getString("receiver_username");
+            User receiver = new User(receiverFirstName, receiverLastName, receiverUsername);
+            receiver.setId(receiverId);
+
+            return receiver;
+        } catch (SQLException throwables) {
+            throw new DatabaseException("Eroare la baza de date!");
+        }
+    }
+
+    private Message getMessageFromResultSet(ResultSet resultSet) {
+        try {
+            User sender = getSenderFromResultSet(resultSet);
+            User receiver = getReceiverFromResultSet(resultSet);
+
+            String message = resultSet.getString("message");
+            LocalDateTime date = resultSet.getTimestamp("date").toLocalDateTime();
+            Long replyId = resultSet.getLong("reply");
+
+            Message reply;
+
+            if (replyId == 0) {
+                reply = null;
+            } else {
+                reply = findOne(replyId);
+            }
+
+            List<User> to = new ArrayList<>();
+            to.add(receiver);
+
+            Message message1 = new Message(sender, to, message);
+            message1.setDate(date);
+            message1.setReply(reply);
+            message1.setId(resultSet.getLong("message_id"));
+
+            return message1;
+        } catch (SQLException throwables) {
+            throw new DatabaseException("Eroare la baza de date!");
+        }
+    }
+
     @Override
     public Message findOne(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("Id-ul nu poate sa fie null!");
         }
 
-        String sqlQuery = "select rm.id as message_id, sm.sender as sender_id, s.first_name as sender_first_name, s.last_name as sender_last_name, rm.receiver as receiver_id, " +
+        String sqlQuery = "select s.username as sender_username, r.username as receiver_username, rm.id as message_id, sm.sender as sender_id, s.first_name as sender_first_name, s.last_name as sender_last_name, rm.receiver as receiver_id, " +
                 "r.first_name as receiver_first_name, r.last_name as receiver_last_name, sm.message, sm.date, sm.reply from \"ReceiverMessage\" as rm inner join " +
                 "\"SenderMessage\" as sm on RM.message_id = sm.id " +
                 "inner join \"User\" as s on sm.sender = s.id " +
@@ -35,39 +96,7 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                Long senderId = resultSet.getLong("sender_id");
-                String senderFirstName = resultSet.getString("sender_first_name");
-                String senderLastName = resultSet.getString("sender_last_name");
-                User sender = new User(senderFirstName, senderLastName);
-                sender.setId(senderId);
-
-                Long receiverId = resultSet.getLong("receiver_id");
-                String receiverFirstName = resultSet.getString("receiver_first_name");
-                String receiverLastName = resultSet.getString("receiver_last_name");
-                User receiver = new User(receiverFirstName, receiverLastName);
-                receiver.setId(receiverId);
-
-                String message = resultSet.getString("message");
-                LocalDateTime date = resultSet.getTimestamp("date").toLocalDateTime();
-                Long replyId = resultSet.getLong("reply");
-
-                Message reply;
-
-                if(replyId == 0) {
-                    reply = null;
-                } else {
-                    reply = findOne(replyId);
-                }
-
-                List<User> to = new ArrayList<>();
-                to.add(receiver);
-
-                Message message1 = new Message(sender, to, message);
-                message1.setDate(date);
-                message1.setReply(reply);
-                message1.setId(resultSet.getLong("message_id"));
-
-                return message1;
+                return getMessageFromResultSet(resultSet);
             } else {
                 return null;
             }
@@ -117,7 +146,7 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
     public Iterable<Message> findAll() {
         List<Message> messages = new ArrayList<>();
 
-        String sqlQuery = "select rm.id as message_id, sm.sender as sender_id, s.first_name as sender_first_name, s.last_name as sender_last_name, rm.receiver as receiver_id, " +
+        String sqlQuery = "select s.username as sender_username, r.username as receiver_username, rm.id as message_id, sm.sender as sender_id, s.first_name as sender_first_name, s.last_name as sender_last_name, rm.receiver as receiver_id, " +
                 "r.first_name as receiver_first_name, r.last_name as receiver_last_name, sm.message, sm.date, sm.reply from \"ReceiverMessage\" as rm inner join " +
                 "\"SenderMessage\" as sm on RM.message_id = sm.id " +
                 "inner join \"User\" as s on sm.sender = s.id " +
@@ -128,39 +157,7 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
             while (resultSet.next()) {
-                Long senderId = resultSet.getLong("sender_id");
-                String senderFirstName = resultSet.getString("sender_first_name");
-                String senderLastName = resultSet.getString("sender_last_name");
-                User sender = new User(senderFirstName, senderLastName);
-                sender.setId(senderId);
-
-                Long receiverId = resultSet.getLong("receiver_id");
-                String receiverFirstName = resultSet.getString("receiver_first_name");
-                String receiverLastName = resultSet.getString("receiver_last_name");
-                User receiver = new User(receiverFirstName, receiverLastName);
-                receiver.setId(receiverId);
-
-                String message = resultSet.getString("message");
-                LocalDateTime date = resultSet.getTimestamp("date").toLocalDateTime();
-                Long replyId = resultSet.getLong("reply");
-
-                Message reply;
-
-                if(replyId == 0) {
-                    reply = null;
-                } else {
-                    reply = findOne(replyId);
-                }
-
-                List<User> to = new ArrayList<>();
-                to.add(receiver);
-
-                Message message1 = new Message(sender, to, message);
-                message1.setDate(date);
-                message1.setReply(reply);
-                message1.setId(resultSet.getLong("message_id"));
-
-                messages.add(message1);
+                messages.add(getMessageFromResultSet(resultSet));
             }
         } catch (SQLException throwables) {
             throw new DatabaseException("Eroare la baza de date!");
@@ -170,7 +167,7 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
     }
 
     public ArrayList<Message> getConversationBetween2Users(User user1, User user2) {
-        String sqlQueryConversation = "select rm.id as message_id, sm.sender as sender_id, s.first_name as sender_first_name, s.last_name as sender_last_name, rm.receiver as receiver_id, " +
+        String sqlQueryConversation = "select s.username as sender_username, r.username as receiver_username, rm.id as message_id, sm.sender as sender_id, s.first_name as sender_first_name, s.last_name as sender_last_name, rm.receiver as receiver_id, " +
                 "r.first_name as receiver_first_name, r.last_name as receiver_last_name, sm.message, sm.date, sm.reply from \"ReceiverMessage\" as rm inner join " +
         "\"SenderMessage\" as sm on RM.message_id = sm.id " +
         "inner join \"User\" as s on sm.sender = s.id " +
@@ -192,39 +189,7 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while(resultSet.next()) {
-                Long senderId = resultSet.getLong("sender_id");
-                String senderFirstName = resultSet.getString("sender_first_name");
-                String senderLastName = resultSet.getString("sender_last_name");
-                User sender = new User(senderFirstName, senderLastName);
-                sender.setId(senderId);
-
-                Long receiverId = resultSet.getLong("receiver_id");
-                String receiverFirstName = resultSet.getString("receiver_first_name");
-                String receiverLastName = resultSet.getString("receiver_last_name");
-                User receiver = new User(receiverFirstName, receiverLastName);
-                receiver.setId(receiverId);
-
-                String message = resultSet.getString("message");
-                LocalDateTime date = resultSet.getTimestamp("date").toLocalDateTime();
-                Long replyId = resultSet.getLong("reply");
-
-                Message reply;
-
-                if(replyId == 0) {
-                    reply = null;
-                } else {
-                    reply = findOne(replyId);
-                }
-
-                List<User> to = new ArrayList<>();
-                to.add(receiver);
-
-                Message message1 = new Message(sender, to, message);
-                message1.setDate(date);
-                message1.setReply(reply);
-                message1.setId(resultSet.getLong("message_id"));
-
-                conversation.add(message1);
+                conversation.add(getMessageFromResultSet(resultSet));
             }
 
             return conversation;
