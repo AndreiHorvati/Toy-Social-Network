@@ -7,6 +7,7 @@ import com.example.toysocialnetworkgui.model.validators.UserValidator;
 import com.example.toysocialnetworkgui.repository.database.FriendshipDatabaseRepository;
 import com.example.toysocialnetworkgui.repository.database.MessageDatabaseRepository;
 import com.example.toysocialnetworkgui.repository.database.UserDatabaseRepository;
+import com.example.toysocialnetworkgui.service.AuthenticationService;
 import com.example.toysocialnetworkgui.service.FriendshipService;
 import com.example.toysocialnetworkgui.service.MessageService;
 import com.example.toysocialnetworkgui.service.UserService;
@@ -15,15 +16,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 
 public class HelloApplication extends Application {
-    @FXML
-    private Label loginLabel;
-
     UserValidator userValidator;
     FriendshipValidator friendshipValidator;
     MessageValidator messageValidator;
@@ -35,6 +32,7 @@ public class HelloApplication extends Application {
     UserService userService;
     FriendshipService friendshipService;
     MessageService messageService;
+    AuthenticationService authenticationService;
 
     Controller controller;
 
@@ -53,8 +51,9 @@ public class HelloApplication extends Application {
         userService = new UserService(userRepository);
         friendshipService = new FriendshipService(friendshipRepository);
         messageService = new MessageService(messageRepository);
+        authenticationService = new AuthenticationService(userRepository);
 
-        controller = new Controller(userService, friendshipService, messageService);
+        controller = new Controller(userService, friendshipService, messageService, authenticationService);
     }
 
     public static void main(String[] args) {
@@ -71,7 +70,7 @@ public class HelloApplication extends Application {
     }
 
     private void initView(Stage primaryStage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("login-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("login-view2.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 50, 450);
 
         primaryStage.setTitle("Login");
@@ -80,7 +79,7 @@ public class HelloApplication extends Application {
 
         initializeController();
 
-        HelloController helloController = fxmlLoader.getController();
+        LoginViewController helloController = fxmlLoader.getController();
         helloController.setController(controller);
     }
 }

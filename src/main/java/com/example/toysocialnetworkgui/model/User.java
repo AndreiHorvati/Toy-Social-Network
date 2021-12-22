@@ -9,51 +9,22 @@ import java.util.Objects;
 public class User extends Entity<Long> {
     private String firstName;
     private String lastName;
-    //private List<User> friends;
+    private String username;
 
     /**
      * Constructorul utilizatorului
      * @param firstName - prenumele utilizatorului
      * @param lastName - numele utilizatorului
      */
-    public User(String firstName, String lastName) {
+    public User(String firstName, String lastName, String username) {
         this.firstName = firstName;
         this.lastName = lastName;
-
-        //friends = new ArrayList<>();
+        this.username = username;
     }
 
-    /**
-     * Adauga un prieten la lista de prieteni a userului
-     * @param friend - prietenul adaugat
-     */
-    //public void addFriend(User friend) {
-        //this.friends.add(friend);
-    //}
-
-    /**
-     * Sterge un prieten din lista de prieteni a utilizatorului
-     * @param friend - prietenul care trebuie sa fie sters
-     */
-    //public void deleteFriend(User friend) {
-        //this.friends.removeIf(user -> user.getId().equals(friend.getId()));
-    //}
-
-    /**
-     * Da o valoare listei de prieteni a utlizatorului
-     * @param newFriends - noua lista de prieteni
-     */
-    //public void setFriends(List<User> newFriends) {
-        //this.friends = newFriends;
-    //}
-
-    /**
-     * Getter pentru lista de prieteni a utilizatorului
-     * @return lista de prieteni
-     */
-    //public List<User> getFriends() {
-        //return friends;
-    //}
+    public String getUsername() {
+        return username;
+    }
 
     /**
      * Getter pentru prenumele utilizatorului

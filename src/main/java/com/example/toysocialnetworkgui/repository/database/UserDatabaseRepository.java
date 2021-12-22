@@ -3,6 +3,7 @@ package com.example.toysocialnetworkgui.repository.database;
 import com.example.toysocialnetworkgui.model.User;
 import com.example.toysocialnetworkgui.model.validators.*;
 import com.example.toysocialnetworkgui.repository.*;
+import com.example.toysocialnetworkgui.utils.Constants;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,6 +12,58 @@ import java.util.List;
 public class UserDatabaseRepository extends AbstractDatabaseRepository<Long, User> {
     public UserDatabaseRepository(String url, String username, String password, Validator<User> validator) {
         super(url, username, password, validator);
+    }
+
+    public User getUserByUsername(String userUsername) {
+        String sqlQuery = "select id, first_name, last_name, username from \"User\" where username = ?";
+
+        try (Connection connection = DriverManager.getConnection(url, username, password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+            preparedStatement.setString(1, userUsername);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return getUserFromResultSet(resultSet);
+            }
+
+            return null;
+        } catch (SQLException e) {
+            throw new DatabaseException("Eroare la baza de date!");
+        }
+    }
+
+    public String getPasswordByUsername(String userUsername) {
+        String sqlQuery = "select password from \"User\" where username = ?";
+
+        try (Connection connection = DriverManager.getConnection(url, username, password)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+            preparedStatement.setString(1, userUsername);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getString("password");
+            }
+
+            return null;
+        } catch (SQLException e) {
+            throw new DatabaseException("Eroare la baza de date!");
+        }
+    }
+
+    private User getUserFromResultSet(ResultSet resultSet) {
+        try {
+            Long userId = resultSet.getLong("id");
+            String firstName = resultSet.getString("first_name");
+            String lastName = resultSet.getString("last_name");
+            String username = resultSet.getString("username");
+
+            User user = new User(firstName, lastName, username);
+            user.setId(userId);
+
+            return user;
+        } catch (SQLException e) {
+            throw new DatabaseException("Eroare la baza de date!");
+        }
     }
 
     @Override
@@ -28,12 +81,7 @@ public class UserDatabaseRepository extends AbstractDatabaseRepository<Long, Use
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                Long userId = resultSet.getLong("id");
-                String firstName = resultSet.getString("first_name");
-                String lastName = resultSet.getString("last_name");
-
-                User user = new User(firstName, lastName);
-                user.setId(userId);
+                User user = getUserFromResultSet(resultSet);
 
                 resultSet.close();
 
@@ -58,12 +106,8 @@ public class UserDatabaseRepository extends AbstractDatabaseRepository<Long, Use
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
             while (resultSet.next()) {
-                Long id = resultSet.getLong("id");
-                String firstName = resultSet.getString("first_name");
-                String lastName = resultSet.getString("last_name");
+                User user = getUserFromResultSet(resultSet);
 
-                User user = new User(firstName, lastName);
-                user.setId(id);
                 users.add(user);
             }
         } catch (SQLException throwables) {
@@ -75,33 +119,36 @@ public class UserDatabaseRepository extends AbstractDatabaseRepository<Long, Use
 
     @Override
     public User save(User entity) {
+        return null;
+    }
+
+    public User saveWithPassword(User entity, String userPassword) {
         if (entity == null) {
             throw new IllegalArgumentException("Entitatea nu poate sa fie null!");
         }
 
         validator.validate(entity);
 
-        String sqlQuery = "insert into \"User\"(first_name, last_name) values(?, ?)";
+        String sqlQuery = "insert into \"User\"(first_name, last_name, username, password) values(?, ?, ?, ?)";
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
              PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 
             preparedStatement.setString(1, entity.getFirstName());
             preparedStatement.setString(2, entity.getLastName());
+            preparedStatement.setString(3, entity.getUsername());
+            preparedStatement.setString(4, userPassword);
 
             preparedStatement.executeUpdate();
 
             return null;
-        }catch (SQLException e)
-        {
+        } catch (SQLException e) {
+            if (e.getMessage().contains("unique")) {
+                throw new ExistingUserException(Constants.existingUserExceptionMessage);
+            }
+
             throw new DatabaseException("Eroare la baza de date!");
         }
-        catch (Exception e) {
-            if (e.getMessage().contains("unique_full_name")) {
-                throw new ExistingUserException("Utilizatorul cu acest nume exista deja!");
-            }
-        }
-        return entity;
     }
 
     @Override
@@ -143,17 +190,16 @@ public class UserDatabaseRepository extends AbstractDatabaseRepository<Long, Use
             try (Connection connection = DriverManager.getConnection(url, username, password);
                  PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 
-                 preparedStatement.setString(1, entity.getFirstName());
-                 preparedStatement.setString(2, entity.getLastName());
-                 preparedStatement.setLong(3, entity.getId());
+                preparedStatement.setString(1, entity.getFirstName());
+                preparedStatement.setString(2, entity.getLastName());
+                preparedStatement.setLong(3, entity.getId());
 
-                 preparedStatement.executeUpdate();
+                preparedStatement.executeUpdate();
 
-                 return null;
+                return null;
             } catch (SQLException throwables) {
                 throw new DatabaseException("Eroare la baza de date!");
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 if (e.getMessage().contains("unique_full_name")) {
                     throw new ExistingUserException("Utilizatorul cu acest nume exista deja!");
                 }
