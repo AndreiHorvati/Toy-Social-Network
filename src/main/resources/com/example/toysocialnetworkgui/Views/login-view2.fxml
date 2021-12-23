@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox fx:id="wrapper" alignment="CENTER" stylesheets="@css/login-view.css" xmlns="http://javafx.com/javafx/17"
+<VBox fx:id="wrapper" alignment="CENTER" stylesheets="@../css/login-view.css" xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.toysocialnetworkgui.LoginViewController">
     <HBox fx:id="tabs" alignment="BOTTOM_RIGHT">
         <Label fx:id="loginLabel" onMouseClicked="#onLoginLabelClick" styleClass="" text="Login" textFill="white"/>

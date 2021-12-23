@@ -13,11 +13,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 public class LoginViewController {
     Controller controller;
+    SceneController sceneController;
 
     @FXML
     Label loginLabel;
@@ -89,6 +91,7 @@ public class LoginViewController {
 
         try {
             controller.login(username, password);
+            changeToMainWindow();
         } catch(NonExistingUserException | WrongPasswordException e) {
             errorLabelLogin.setText(e.getMessage());
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -98,6 +101,23 @@ public class LoginViewController {
 
     public void setController(Controller controller) {
         this.controller = controller;
+    }
+
+    public void setSceneController(SceneController sceneController) {
+        this.sceneController = sceneController;
+    }
+
+    private void changeToMainWindow() {
+        try {
+            this.sceneController.changeToMainScene();
+
+            MainViewController mainViewController = this.sceneController.getMainViewController();
+
+            mainViewController.setController(controller);
+            mainViewController.setSearchBarEntries();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 

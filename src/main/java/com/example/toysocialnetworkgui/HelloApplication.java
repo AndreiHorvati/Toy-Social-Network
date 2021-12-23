@@ -14,8 +14,10 @@ import com.example.toysocialnetworkgui.service.UserService;
 import javafx.application.Application;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -70,16 +72,17 @@ public class HelloApplication extends Application {
     }
 
     private void initView(Stage primaryStage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("login-view2.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 50, 450);
+        SceneController sceneController = new SceneController(primaryStage);
 
-        primaryStage.setTitle("Login");
-        primaryStage.setScene(scene);
+        primaryStage.setTitle("ToySocialNetwork");
+        sceneController.changeToLoginScene();
         primaryStage.show();
 
         initializeController();
 
-        LoginViewController helloController = fxmlLoader.getController();
-        helloController.setController(controller);
+        LoginViewController loginViewController = sceneController.getLoginViewController();
+
+        loginViewController.setController(controller);
+        loginViewController.setSceneController(sceneController);
     }
 }

@@ -1,14 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="$CONTROLLER_NAME$"
-            prefHeight="400.0" prefWidth="600.0" >
-
+<?import com.example.toysocialnetworkgui.AutoCompleteTextField?>
+<AnchorPane fx:id="wrapper" maxWidth="1000.0" prefHeight="400.0" prefWidth="1000.0" stylesheets="@../css/main-view.css"
+            xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.toysocialnetworkgui.MainViewController">
+    <children>
+        <AnchorPane fx:id="menu" minWidth="1000.0" opacity="0.73" prefHeight="59.0" prefWidth="1000.0">
+            <AutoCompleteTextField fx:id="searchBar" layoutX="25.0" layoutY="17.0" prefHeight="26.0"
+                                   prefWidth="231.0">
+                <padding>
+                    <Insets left="40.0"/>
+                </padding>
+            </AutoCompleteTextField>
+            <ImageView fitHeight="26.0" fitWidth="29.0" layoutX="30.0" layoutY="18.0" opacity="0.71"
+                       pickOnBounds="true" preserveRatio="true">
+                <image>
+                    <Image url="@../images/1200px-Search_Icon.png"/>
+                </image>
+            </ImageView>
+        </AnchorPane>
+    </children>
 </AnchorPane>

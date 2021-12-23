@@ -24,6 +24,10 @@ public class Controller implements Observable {
 
     private List<Observer> observers = new ArrayList<>();
 
+    public List<String> getFullNames() {
+        return this.userService.getFullNames();
+    }
+
     @Override
     public void addObserver(Observer e) {
         observers.add(e);

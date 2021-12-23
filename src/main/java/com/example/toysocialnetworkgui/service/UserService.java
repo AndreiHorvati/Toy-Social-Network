@@ -200,4 +200,15 @@ public class UserService {
     public Iterable<User> findAll() {
         return repository.findAll();
     }
+
+    public List<String> getFullNames() {
+        List<String> fullNames = new ArrayList<>();
+
+        findAll().forEach(user -> {
+            String fullName = user.getFirstName() + " " + user.getLastName();
+            fullNames.add(fullName);
+        });
+
+        return fullNames;
+    }
 }
