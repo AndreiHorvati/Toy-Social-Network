@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane onMouseClicked="#onFriendProfileButtonPressed" fx:id="wrapper" prefHeight="100.0" prefWidth="60.0" stylesheets="@../css/friend-profile-from-friends-list-view.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.toysocialnetworkgui.FriendProfileFromFriendsListController">
+    <VBox fx:id="cell" alignment="TOP_CENTER" prefHeight="83.0" prefWidth="60.0" spacing="5.0" AnchorPane.topAnchor="10.0">
+        <ImageView fx:id="profilePicture" fitHeight="45.0" fitWidth="43.0" pickOnBounds="true">
+            <Image url="@../images/profile-2398782_960_720.png" />
+        </ImageView>
+        <Label fx:id="nameLabel" alignment="CENTER" prefHeight="25.0" prefWidth="46.0" text="Label" textFill="WHITE">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </Label>
+    </VBox>
+</AnchorPane>

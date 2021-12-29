@@ -96,6 +96,31 @@ public class UserDatabaseRepository extends AbstractDatabaseRepository<Long, Use
         }
     }
 
+    public String getProfilePicture(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id-ul nu poate sa fie null!");
+        }
+
+        String sqlQuery = "select profile_image from \"User\" where id=?";
+
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
+
+            preparedStatement.setLong(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getString("profile_image");
+            } else {
+                resultSet.close();
+
+                return null;
+            }
+        } catch (SQLException throwables) {
+            throw new DatabaseException("Eroare la baza de date!");
+        }
+    }
+
     @Override
     public Iterable<User> findAll() {
         List<User> users = new ArrayList<User>();

@@ -1,5 +1,6 @@
 package com.example.toysocialnetworkgui;
 
+/*
 import com.example.toysocialnetworkgui.controller.Controller;
 import com.example.toysocialnetworkgui.model.FriendRequestDTO;
 import javafx.collections.FXCollections;
@@ -78,3 +79,4 @@ public class FriendRequestsController {
         }
     }
 }
+*/

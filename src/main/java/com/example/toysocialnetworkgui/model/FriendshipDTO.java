@@ -5,11 +5,13 @@ import java.time.LocalDateTime;
 public class FriendshipDTO {
     private String friendFirstName;
     private String friendLastName;
+    private String friendUsername;
     private LocalDateTime date;
 
-    public FriendshipDTO(String friendFirstName, String friendLastName, LocalDateTime date) {
+    public FriendshipDTO(String friendFirstName, String friendLastName, String friendUsername, LocalDateTime date) {
         this.friendFirstName = friendFirstName;
         this.friendLastName = friendLastName;
+        this.friendUsername = friendUsername;
         this.date = date;
     }
 
@@ -19,6 +21,10 @@ public class FriendshipDTO {
 
     public String getFriendLastName() {
         return friendLastName;
+    }
+
+    public String getFriendUsername() {
+        return friendUsername;
     }
 
     public LocalDateTime getDate() {

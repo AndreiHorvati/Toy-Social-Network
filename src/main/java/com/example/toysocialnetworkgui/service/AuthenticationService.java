@@ -32,4 +32,8 @@ public class AuthenticationService {
             throw new WrongPasswordException(Constants.wrongPasswordException);
         }
     }
+
+    public User getCurrentUser() {
+        return this.currentUser;
+    }
 }

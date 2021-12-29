@@ -24,8 +24,26 @@ public class Controller implements Observable {
 
     private List<Observer> observers = new ArrayList<>();
 
-    public List<String> getFullNames() {
-        return this.userService.getFullNames();
+    public List<String> getUsersDetails() {
+        return this.userService.getUsersDetails();
+    }
+
+    public User getUserByUsername(String username) {
+        return this.userService.getUserByUsername(username);
+    }
+
+    public Page getUserPage(User user) {
+        Page page = new Page(user);
+        List<FriendshipDTO> friendshipDTOList = getAllFriendships(user);
+        page.setFriends(convertFriendshipDTOListToUserList(friendshipDTOList));
+
+        return page;
+    }
+
+    public List<User> convertFriendshipDTOListToUserList(List<FriendshipDTO> friendshipDTOList) {
+        return friendshipDTOList.stream().map(friendshipDTO -> {
+            return getUserByUsername(friendshipDTO.getFriendUsername());
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -57,6 +75,10 @@ public class Controller implements Observable {
         this.authenticationService = authenticationService;
     }
 
+    public String getProfilePicture(String username) {
+        return userService.getProfilePicture(username);
+    }
+
     public void login(String username, String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
         authenticationService.login(username, password);
     }
@@ -65,7 +87,7 @@ public class Controller implements Observable {
      * @return utilizatorul curent
      */
     public User getCurrentUser() {
-        return userService.getCurrentUser();
+        return authenticationService.getCurrentUser();
     }
 
     public int numberOfFriends(Long id) {
@@ -127,6 +149,45 @@ public class Controller implements Observable {
             addFriend(getCurrentUser(), firstName, lastName);
         } catch (IllegalArgumentException e) {
             throw new NonExistingUserException("Utilizatorul curent nu exista!");
+        }
+    }
+
+    public Friendship getFriendshipBetweenCurrentUserAndAnotherUser(String username) {
+        try {
+            return getFriendshipBetweenTwoUsers(getCurrentUser(), username);
+        } catch (IllegalArgumentException e) {
+            throw new NonExistingUserException("Utilizatorul curent nu exista!");
+        }
+    }
+
+    public Friendship getFriendshipBetweenTwoUsers(User user, String username) {
+        if (user == null) {
+            throw new IllegalArgumentException("Userul nu poate sa fie null!");
+        }
+
+        if (userService.findOne(user.getId()) == null) {
+            throw new NonExistingUserException("Utilizatorul cautat nu exista!");
+        }
+
+        try {
+            Long friendsId = userService.getUserIdByUsername(username);
+            userService.findOne(friendsId);
+
+            Friendship friendship = null;
+
+            Friendship firstCandidate = friendshipService.findOne(new Tuple<>(user.getId(), friendsId));
+            if (firstCandidate != null) {
+                friendship = firstCandidate;
+            }
+
+            Friendship secondCandidate = friendshipService.findOne(new Tuple<>(friendsId, user.getId()));
+            if (secondCandidate != null) {
+                friendship = secondCandidate;
+            }
+
+            return friendship;
+        } catch (IllegalArgumentException e) {
+            throw new NonExistingUserException("Prietenul cautat nu exista!");
         }
     }
 
@@ -332,28 +393,22 @@ public class Controller implements Observable {
         return user;
     }
 
-    /**
-     * Sterge un prieten de la utilizatorul curent pe baza numelui sau
-     *
-     * @param firstName - prenumele prietenului
-     * @param lastName  - numele prietenului
-     */
-    public void deleteFriend(User user, String firstName, String lastName) {
+    public void deleteFriend(User user, String username) {
         if (user == null) {
             throw new IllegalArgumentException("Utilizatorul nu poate sa fie null!");
         }
 
-        if (userService.getUserIdByName(user.getFirstName(), user.getLastName()) == null) {
+        if (userService.getUserIdByUsername(user.getUsername()) == null) {
             throw new NonExistingUserException("Utilizatorul nu exista!");
         }
 
-        Long friendId = userService.getUserIdByName(firstName, lastName);
+        Long friendId = userService.getUserIdByUsername(username);
         if (friendId == null) {
             throw new NonExistingUserException("Prietenul cautat nu exista!");
         }
 
         int numberOfFriends = numberOfFriends(user.getId());
-        friendshipService.deleteFriendship(user.getId(), userService.getUserIdByName(firstName, lastName));
+        friendshipService.deleteFriendship(user.getId(), friendId);
 
         int newNumberOfFriends = numberOfFriends(user.getId());
 
@@ -362,9 +417,41 @@ public class Controller implements Observable {
         }
     }
 
-    public void deleteFriendFromCurrentUser(String firstName, String lastName) {
+    public void deleteFriendRequest(User user, String username) {
+        if (user == null) {
+            throw new IllegalArgumentException("Utilizatorul nu poate sa fie null!");
+        }
+
+        if (userService.getUserIdByUsername(user.getUsername()) == null) {
+            throw new NonExistingUserException("Utilizatorul nu exista!");
+        }
+
+        Long friendId = userService.getUserIdByUsername(username);
+        if (friendId == null) {
+            throw new NonExistingUserException("Prietenul cautat nu exista!");
+        }
+
+        int numberOfFriends = numberOfFriends(user.getId());
+        friendshipService.deleteFriendRequest(user.getId(), friendId);
+
+        int newNumberOfFriends = numberOfFriends(user.getId());
+
+        if (numberOfFriends == newNumberOfFriends) {
+            throw new NonExistingFriendRequest("Cererea cautata nu exista!");
+        }
+    }
+
+    public void deleteFriendRequestFromCurrentUser(String username) {
         try {
-            deleteFriend(getCurrentUser(), firstName, lastName);
+            deleteFriendRequest(getCurrentUser(), username);
+        } catch (IllegalArgumentException e) {
+            throw new NonExistingUserException("Utilizatorul curent nu exista!");
+        }
+    }
+
+    public void deleteFriendFromCurrentUser(String username) {
+        try {
+            deleteFriend(getCurrentUser(), username);
         } catch (IllegalArgumentException e) {
             throw new NonExistingUserException("Utilizatorul curent nu exista!");
         }
@@ -435,7 +522,7 @@ public class Controller implements Observable {
         return userService.findAll();
     }
 
-    public Friendship sendFriendRequest(User user, String firstName, String lastName) {
+    public Friendship sendFriendRequest(User user, String username) {
         if (user == null) {
             throw new IllegalArgumentException("Userul nu poate fi nul!");
         }
@@ -445,7 +532,7 @@ public class Controller implements Observable {
         }
 
         try {
-            Long friendsId = userService.getUserIdByName(firstName, lastName);
+            Long friendsId = userService.getUserIdByUsername(username);
             userService.findOne(friendsId);
 
             if (user.getId().equals(friendsId)) {
@@ -471,7 +558,7 @@ public class Controller implements Observable {
         }
     }
 
-    public Friendship changeFriendshipStatus(User user, String firstName, String lastName, String status) {
+    public Friendship changeFriendshipStatus(User user, String username, String status) {
         if (user == null) {
             throw new IllegalArgumentException("Userul nu poate fi nul!");
         }
@@ -481,7 +568,7 @@ public class Controller implements Observable {
         }
 
         try {
-            Long friendsId = userService.getUserIdByName(firstName, lastName);
+            Long friendsId = userService.getUserIdByUsername(username);
             userService.findOne(friendsId);
 
             Friendship friendships2 = friendshipService.findOne(new Tuple<>(friendsId, user.getId()));
@@ -506,36 +593,36 @@ public class Controller implements Observable {
         }
     }
 
-    public Friendship approveFriendRequest(User user, String firstName, String lastName) {
-        Friendship f = changeFriendshipStatus(user, firstName, lastName, "approved");
+    public Friendship approveFriendRequest(User user, String username) {
+        Friendship f = changeFriendshipStatus(user, username, "approved");
         notifyObservers();
 
         return f;
     }
 
-    public Friendship rejecteFriendRequest(User user, String firstName, String lastName) {
-        return changeFriendshipStatus(user, firstName, lastName, "rejected");
+    public Friendship rejecteFriendRequest(User user, String username) {
+        return changeFriendshipStatus(user, username, "rejected");
     }
 
-    public Friendship rejectFriendRequestFromCurrentUser(String firstName, String lastName) {
+    public Friendship rejectFriendRequestFromCurrentUser(String username) {
         try {
-            return rejecteFriendRequest(getCurrentUser(), firstName, lastName);
+            return rejecteFriendRequest(getCurrentUser(), username);
         } catch (IllegalArgumentException e) {
             throw new NonExistingUserException("Userul curent nu exista!");
         }
     }
 
-    public Friendship approveFriendRequestFromCurrentUser(String firstName, String lastName) {
+    public Friendship approveFriendRequestFromCurrentUser(String username) {
         try {
-            return approveFriendRequest(getCurrentUser(), firstName, lastName);
+            return approveFriendRequest(getCurrentUser(), username);
         } catch (IllegalArgumentException e) {
             throw new NonExistingUserException("Userul curent nu exista!");
         }
     }
 
-    public Friendship sendFriendRequestFromCurrentUser(String firstName, String lastName) {
+    public Friendship sendFriendRequestFromCurrentUser(String username) {
         try {
-            return sendFriendRequest(getCurrentUser(), firstName, lastName);
+            return sendFriendRequest(getCurrentUser(), username);
         } catch (IllegalArgumentException e) {
             throw new NonExistingUserException("Userul curent nu exista!");
         }
@@ -560,14 +647,22 @@ public class Controller implements Observable {
                 x.getStatus().equals("approved")).map(x -> {
             String firstname;
             String lastname;
+            String username;
+
             if (x.getId().getLeft().equals(user.getId())) {
-                firstname = userService.findOne(x.getId().getRight()).getFirstName();
-                lastname = userService.findOne(x.getId().getRight()).getLastName();
+                User friend = userService.findOne(x.getId().getRight());
+
+                firstname = friend.getFirstName();
+                lastname = friend.getLastName();
+                username = friend.getUsername();
             } else {
-                firstname = userService.findOne(x.getId().getLeft()).getFirstName();
-                lastname = userService.findOne(x.getId().getLeft()).getLastName();
+                User friend = userService.findOne(x.getId().getLeft());
+
+                firstname = friend.getFirstName();
+                lastname = friend.getLastName();
+                username = friend.getUsername();
             }
-            return new FriendshipDTO(firstname, lastname, x.getDate());
+            return new FriendshipDTO(firstname, lastname, username, x.getDate());
         });
     }
 
@@ -607,18 +702,20 @@ public class Controller implements Observable {
 
         ArrayList<Friendship> friendships = (ArrayList<Friendship>) friendshipService.findAll();
 
-        return friendships.stream().filter(x -> (x.getId().getLeft().equals(user.getId()) || x.getId().getRight().equals(user.getId()))
+        return friendships.stream().filter(x -> x.getId().getRight().equals(user.getId())
+                && x.getStatus().equals("pending")
         ).map(x -> {
             String firstname;
             String lastname;
-            if (x.getId().getLeft().equals(user.getId())) {
-                firstname = userService.findOne(x.getId().getRight()).getFirstName();
-                lastname = userService.findOne(x.getId().getRight()).getLastName();
-            } else {
-                firstname = userService.findOne(x.getId().getLeft()).getFirstName();
-                lastname = userService.findOne(x.getId().getLeft()).getLastName();
-            }
-            return new FriendRequestDTO(firstname, lastname, x.getDate(), x.getStatus());
+            String username;
+
+            User friend = userService.findOne(x.getId().getLeft());
+
+            firstname = friend.getFirstName();
+            lastname = friend.getLastName();
+            username = friend.getUsername();
+
+            return new FriendRequestDTO(firstname, lastname, username, x.getDate(), x.getStatus());
         });
     }
 

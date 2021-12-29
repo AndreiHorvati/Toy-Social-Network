@@ -35,6 +35,10 @@ public class SceneController {
     public void changeToLoginScene() throws IOException {
         initLoginScene();
         this.primaryStage.setScene(loginScene);
+        this.primaryStage.centerOnScreen();
+        primaryStage.setWidth(400);
+        primaryStage.setHeight(580);
+        primaryStage.centerOnScreen();
     }
 
     public void changeToMainScene() throws IOException {
@@ -43,6 +47,8 @@ public class SceneController {
         this.primaryStage.setWidth(1000);
         this.primaryStage.setHeight(600);
         this.primaryStage.setMaxWidth(1000);
+        this.primaryStage.setMaxHeight(600);
+        this.primaryStage.centerOnScreen();
     }
 
     public LoginViewController getLoginViewController() {

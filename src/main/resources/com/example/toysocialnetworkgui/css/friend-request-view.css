@@ -1,0 +1,46 @@
+.button {
+    -fx-border-radius: 50px;
+    -fx-background-radius: 50px;
+    -fx-text-fill: white;
+    -fx-border-width: 0.4;
+    -fx-border-color: white;
+}
+
+.root {
+    -fx-background-color: #391339;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+}
+
+#wrapper {
+    -fx-background-color: #391339;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 12px;
+    -fx-border-width: 0.6;
+    -fx-border-color: white;
+}
+
+#acceptButton {
+    -fx-background-color: #2e2eb8;
+}
+
+#rejectButton {
+    -fx-background-color: #4d4d4d;
+}
+
+#acceptButton:hover {
+    -fx-background-color: #000066;
+}
+
+#rejectButton:hover {
+    -fx-background-color: #262626;
+}
+
+.label {
+    -fx-text-fill: white;
+}
+
+#profilePicture {
+    -fx-effect: dropshadow( gaussian , rgba(0,0,0,0.7) , 10,0,0,1 );
+}

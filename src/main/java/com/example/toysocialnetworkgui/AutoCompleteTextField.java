@@ -22,7 +22,14 @@ public class AutoCompleteTextField extends TextField {
             if (getText().length() == 0) {
                 entriesPopup.hide();
             } else {
-                LinkedList<String> searchResult = new LinkedList<>(entries.subSet(getText(), getText() + Character.MAX_VALUE));
+                LinkedList<String> searchResult = new LinkedList<>();
+
+                String[] input = entries.toArray(new String[entries.size()]);
+                for (int i = 0; i < input.length; i++) {
+                    if (input[i].toUpperCase().contains(getText().toUpperCase())) {
+                        searchResult.add(input[i]);
+                    }
+                }
 
                 if (entries.size() > 0) {
                     populatePopup(searchResult);

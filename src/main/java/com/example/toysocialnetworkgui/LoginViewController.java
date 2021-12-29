@@ -115,9 +115,10 @@ public class LoginViewController {
 
             mainViewController.setController(controller);
             mainViewController.setSearchBarEntries();
+            mainViewController.setSceneController(sceneController);
+            mainViewController.loadProfile(controller.getUserPage(controller.getCurrentUser()));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 }
-

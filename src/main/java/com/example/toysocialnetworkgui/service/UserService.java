@@ -68,6 +68,16 @@ public class UserService {
         }
     }
 
+    public String getProfilePicture(String username) {
+        Long id = getUserIdByUsername(username);
+
+        try {
+            return repository.getProfilePicture(id);
+        } catch (IllegalArgumentException e) {
+            throw new NonExistingUserException("Utilizatorul cautat nu exista!");
+        }
+    }
+
     /**
      * cauta id-ul userului cu numele date
      *
@@ -78,6 +88,16 @@ public class UserService {
     public Long getUserIdByName(String firstName, String lastName) {
         for (User user : findAll()) {
             if (user.getFirstName().equals(firstName) && user.getLastName().equals(lastName)) {
+                return user.getId();
+            }
+        }
+
+        return null;
+    }
+
+    public Long getUserIdByUsername(String username) {
+        for(User user : findAll()) {
+            if(user.getUsername().equals(username)) {
                 return user.getId();
             }
         }
@@ -201,14 +221,20 @@ public class UserService {
         return repository.findAll();
     }
 
-    public List<String> getFullNames() {
-        List<String> fullNames = new ArrayList<>();
+    public List<String> getUsersDetails() {
+        List<String> usersDetails = new ArrayList<>();
 
         findAll().forEach(user -> {
             String fullName = user.getFirstName() + " " + user.getLastName();
-            fullNames.add(fullName);
+            String username = user.getUsername();
+
+            usersDetails.add(fullName + " - " + username);
         });
 
-        return fullNames;
+        return usersDetails;
+    }
+
+    public User getUserByUsername(String username) {
+        return repository.getUserByUsername(username);
     }
 }

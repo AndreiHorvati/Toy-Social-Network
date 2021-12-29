@@ -1,0 +1,15 @@
+#mainLabel {
+    -fx-font-size: 20px;
+}
+
+#gridPane {
+    -fx-background-color: transparent;
+}
+
+#scrollPane {
+    -fx-background-color: transparent;
+}
+
+#scrollPane .viewport {
+    -fx-background-color: transparent;
+}

@@ -1,0 +1,20 @@
+#wrapper {
+    -fx-background-color: #1a1a1a;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-width: 0.2;
+    -fx-border-color: white;
+    -fx-effect: dropshadow( gaussian , rgba(0,0,0,0.7) , 10,0,0,1 );
+}
+
+#nameLabel {
+    -fx-font-size: 10px;
+}
+
+#wrapper:hover {
+    -fx-background-color: rgba(255, 255, 255, .1);
+}
+
+#profilePicture {
+    -fx-effect: dropshadow( gaussian , rgba(0,0,0,0.7) , 10,0,0,1 );
+}

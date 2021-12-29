@@ -69,6 +69,7 @@ public class HelloApplication extends Application {
         primaryStage.setHeight(580);
 
         primaryStage.show();
+        primaryStage.centerOnScreen();
     }
 
     private void initView(Stage primaryStage) throws IOException {
