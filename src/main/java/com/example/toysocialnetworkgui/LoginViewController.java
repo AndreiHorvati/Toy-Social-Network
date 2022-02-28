@@ -20,6 +20,7 @@ import java.security.spec.InvalidKeySpecException;
 public class LoginViewController {
     Controller controller;
     SceneController sceneController;
+    NotificationsThread notificationThread;
 
     @FXML
     Label loginLabel;
@@ -92,11 +93,17 @@ public class LoginViewController {
         try {
             controller.login(username, password);
             changeToMainWindow();
+
+            startNotificationsThread();
         } catch(NonExistingUserException | WrongPasswordException e) {
             errorLabelLogin.setText(e.getMessage());
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
         }
+    }
+
+    private void startNotificationsThread() {
+        this.notificationThread.start();
     }
 
     public void setController(Controller controller) {
@@ -117,8 +124,15 @@ public class LoginViewController {
             mainViewController.setSearchBarEntries();
             mainViewController.setSceneController(sceneController);
             mainViewController.loadProfile(controller.getUserPage(controller.getCurrentUser()));
+            mainViewController.setNotificationThread(notificationThread);
+
+            notificationThread.setMainViewController(mainViewController);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setNotificationThread(NotificationsThread notificationsThread) {
+        this.notificationThread = notificationsThread;
     }
 }

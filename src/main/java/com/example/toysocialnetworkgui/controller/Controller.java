@@ -8,10 +8,15 @@ import com.example.toysocialnetworkgui.utils.Graph;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Clasa controller care delega responsabilitatea service-urilor
@@ -21,6 +26,7 @@ public class Controller implements Observable {
     private FriendshipService friendshipService;
     private MessageService messageService;
     private AuthenticationService authenticationService;
+    private EventService eventService;
 
     private List<Observer> observers = new ArrayList<>();
 
@@ -40,6 +46,18 @@ public class Controller implements Observable {
         return page;
     }
 
+    public List<Event> subscribedEvents(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("Userul nu poate sa fie null!");
+        }
+
+        if (userService.findOne(user.getId()) == null) {
+            throw new NonExistingUserException("Utilizatorul cautat nu exista!");
+        }
+
+        return eventService.subscribedEvents(user);
+    }
+
     public List<User> convertFriendshipDTOListToUserList(List<FriendshipDTO> friendshipDTOList) {
         return friendshipDTOList.stream().map(friendshipDTO -> {
             return getUserByUsername(friendshipDTO.getFriendUsername());
@@ -54,12 +72,12 @@ public class Controller implements Observable {
 
     @Override
     public void removeObserver(Observer e) {
-        //observers.remove(e);
+        observers.remove(e);
     }
 
     @Override
     public void notifyObservers() {
-        observers.stream().forEach(Observer::update);
+        observers.forEach(Observer::update);
     }
 
     /**
@@ -68,11 +86,12 @@ public class Controller implements Observable {
      * @param userService       - service-ul pentru useri
      * @param friendshipService - service-ul pentru prietenii
      */
-    public Controller(UserService userService, FriendshipService friendshipService, MessageService messageService, AuthenticationService authenticationService) {
+    public Controller(UserService userService, FriendshipService friendshipService, MessageService messageService, AuthenticationService authenticationService, EventService eventService) {
         this.userService = userService;
         this.friendshipService = friendshipService;
         this.messageService = messageService;
         this.authenticationService = authenticationService;
+        this.eventService = eventService;
     }
 
     public String getProfilePicture(String username) {
@@ -160,6 +179,38 @@ public class Controller implements Observable {
         }
     }
 
+    public void subscribeToEvent(User user, Event event) {
+        if (user == null) {
+            throw new IllegalArgumentException("Userul nu poate sa fie null!");
+        }
+
+        if (userService.findOne(user.getId()) == null) {
+            throw new NonExistingUserException("Utilizatorul cautat nu exista!");
+        }
+
+        if (eventService.findOne(event.getId()) == null) {
+            throw new NonExistingEventException("Eventul cautat nu exista!");
+        }
+
+        eventService.subscribeToEvent(user, event);
+    }
+
+    public void unsbscribeToEvent(User user, Event event) {
+        if (user == null) {
+            throw new IllegalArgumentException("Userul nu poate sa fie null!");
+        }
+
+        if (userService.findOne(user.getId()) == null) {
+            throw new NonExistingUserException("Utilizatorul cautat nu exista!");
+        }
+
+        if (eventService.findOne(event.getId()) == null) {
+            throw new NonExistingEventException("Eventul cautat nu exista!");
+        }
+
+        eventService.unsbscribeToEvent(user, event);
+    }
+
     public Friendship getFriendshipBetweenTwoUsers(User user, String username) {
         if (user == null) {
             throw new IllegalArgumentException("Userul nu poate sa fie null!");
@@ -189,6 +240,25 @@ public class Controller implements Observable {
         } catch (IllegalArgumentException e) {
             throw new NonExistingUserException("Prietenul cautat nu exista!");
         }
+    }
+
+    public Iterable<Event> getAllEvents() {
+        return eventService.findAll();
+    }
+
+    public Event saveEvent(User creator, String name, String description, String location,
+                           LocalDateTime date) {
+        if (creator == null) {
+            throw new IllegalArgumentException("Userul nu poate sa fie null!");
+        }
+
+        if (userService.findOne(creator.getId()) == null) {
+            throw new NonExistingUserException("Utilizatorul cautat nu exista!");
+        }
+
+        Event event = new Event(creator, name, description, location, date);
+
+        return eventService.save(event);
     }
 
     /**
@@ -226,15 +296,22 @@ public class Controller implements Observable {
         }
     }
 
-    public void sendMessageToUsersFromCurrentUser(String message, List<String> names) {
+    public boolean verifyIfUserIsCurrentUser(User user) {
+        return user.getId().equals(getCurrentUser().getId());
+    }
+
+    public Message sendMessageToUsersFromCurrentUser(String message, List<String> names) {
         try {
-            sendMessageToUsers(getCurrentUser(), message, names);
+            Message returnValue = sendMessageToUsers(getCurrentUser(), message, names);
+            notifyObservers();
+
+            return returnValue;
         } catch (IllegalArgumentException e) {
             throw new NonExistingUserException("Utilizatorul curent nu exista!");
         }
     }
 
-    public void replyToMessage(User user1, String firstName, String lastName, String stringMessage, Long messageId) {
+    public Message replyToMessage(User user1, String firstName, String lastName, String stringMessage, Long messageId) {
         if (user1 == null) {
             throw new IllegalArgumentException("Userul nu poate sa fie null!");
         }
@@ -262,7 +339,11 @@ public class Controller implements Observable {
         Message replyMessage = new Message(user1, to, stringMessage);
         replyMessage.setReply(message);
 
-        messageService.save(replyMessage);
+        return messageService.save(replyMessage);
+    }
+
+    public List<User> getAllUsersForConversations(User user) {
+        return messageService.getAllUsersIdsForConversations(user).stream().map(id -> userService.findOne(id)).collect(Collectors.toList());
     }
 
     public void replyToAll(User user1, String firstName, String lastName, String stringMessage, Long messageId) {
@@ -301,11 +382,14 @@ public class Controller implements Observable {
         messageService.save(replyMessage);
     }
 
-    public void currentUserReply(String firstMName, String lastName, String stringMessage, Long messageId) {
+    public Message currentUserReply(String firstMName, String lastName, String stringMessage, Long messageId) {
         try {
-            replyToMessage(getCurrentUser(), firstMName, lastName, stringMessage, messageId);
+            Message returnValue = replyToMessage(getCurrentUser(), firstMName, lastName, stringMessage, messageId);
+            notifyObservers();
+
+            return returnValue;
         } catch (IllegalArgumentException e) {
-            throw new NonExistingUserException("Utilizatorul curent nu exista!");
+            throw new NonExistingUserException("Utilizatorul curent2 nu exista!");
         }
     }
 
@@ -317,7 +401,7 @@ public class Controller implements Observable {
         }
     }
 
-    public void sendMessageToUsers(User user, String message, List<String> names) {
+    public Message sendMessageToUsers(User user, String message, List<String> names) {
         if (user == null) {
             throw new IllegalArgumentException("Userul nu poate sa fie null!");
         }
@@ -327,15 +411,15 @@ public class Controller implements Observable {
         }
 
         ArrayList<User> receivers = userService.getUsersByStringArray(names);
-        messageService.sendMessageToUsers(user, message, receivers);
+        return messageService.sendMessageToUsers(user, message, receivers);
     }
 
-    public ArrayList<Message> conversationOfTwoUsers(User user1, String firstName, String lastName) {
+    public ArrayList<Message> conversationOfTwoUsers(User user1, String username) {
         if (user1 == null) {
             throw new IllegalArgumentException("Userul nu poate sa fie null!");
         }
 
-        Long user2Id = userService.getUserIdByName(firstName, lastName);
+        Long user2Id = userService.getUserIdByUsername(username);
 
         if (userService.findOne(user1.getId()) == null ||
                 user2Id == null) {
@@ -349,9 +433,9 @@ public class Controller implements Observable {
         return userService.getUserIdByName(firstName, lastName);
     }
 
-    public ArrayList<Message> currentUsersConversationWithAnotherUser(String firstName, String lastName) {
+    public ArrayList<Message> currentUsersConversationWithAnotherUser(String username) {
         try {
-            return conversationOfTwoUsers(getCurrentUser(), firstName, lastName);
+            return conversationOfTwoUsers(getCurrentUser(), username);
         } catch (IllegalArgumentException e) {
             throw new NonExistingUserException("Utilizatorul curent nu exista!");
         }
@@ -683,6 +767,83 @@ public class Controller implements Observable {
         }
     }
 
+    public Iterable<Message> getAllMessages() {
+        return messageService.findAll();
+    }
+
+    public List<ReportItem> getAllFriendshipsAndReceivedMessagesByCurrentUserBetweenTwoDates(LocalDateTime date1, LocalDateTime date2) {
+        List<ReportItem> reportItems = new ArrayList<>();
+
+        getAllFriendshipsFromCurrentUserBetweenTwoDates(date1, date2).forEach(friendshipDTO -> {
+            String content = "V-ati imprietenit cu " + friendshipDTO.getFriendFirstName() + " " + friendshipDTO.getFriendLastName() +
+                    " la data de " + friendshipDTO.getDate().getDayOfMonth() + " " + friendshipDTO.getDate().getMonth().getValue() + " " +
+                    friendshipDTO.getDate().getYear() + "!";
+            ReportItem reportItem = new ReportItem(content, friendshipDTO.getDate());
+
+            reportItems.add(reportItem);
+        });
+
+        getAllReceivedMessagesByCurrentUserBetweenTwoDates(date1, date2).forEach(message -> {
+            String content = "Ati primit un mesajul " + message.getMessage() + " de la " + message.getFrom().getFirstName() + " " + message.getFrom().getLastName() +
+                    " la data de " + message.getDate().getDayOfMonth() + " " + message.getDate().getMonth().getValue() + " " +
+                    message.getDate().getYear() + "!";
+            ReportItem reportItem = new ReportItem(content, message.getDate());
+
+            reportItems.add(reportItem);
+        });
+
+        return reportItems.stream().sorted(Comparator.comparing(ReportItem::getDate)).collect(Collectors.toList());
+    }
+
+    public List<Message> getAllMessagesReceivedByCurrentUserFromAnotherUserBetweenTwoDates(String username, LocalDateTime date1, LocalDateTime date2) {
+        if (username == null) {
+            throw new IllegalArgumentException("Userulname-ul nu poate fi nul!");
+        }
+
+        User user = getUserByUsername(username);
+        if (user == null) {
+            throw new NonExistingUserException("Nu exista userul!");
+        }
+
+        Friendship friendships1 = friendshipService.findOne(new Tuple<>(user.getId(), getCurrentUser().getId()));
+        Friendship friendships2 = friendshipService.findOne(new Tuple<>(getCurrentUser().getId(), user.getId()));
+
+        if (friendships1 != null) {
+            if (!friendships1.getStatus().equals("approved")) {
+                throw new NonexistingFriendException("Cei 2 nu sunt prieteni!");
+            } else {
+                return StreamSupport.stream(getAllMessages().spliterator(), false)
+                        .filter(message -> message.getFrom().getId().equals(user.getId()) &&
+                             message.getTo().contains(getCurrentUser()) &&
+                             message.getDate().isAfter(date1) &&
+                             message.getDate().isBefore(date2)).collect(Collectors.toList());
+            }
+        } else if(friendships2 != null) {
+            if (!friendships2.getStatus().equals("approved")) {
+                throw new NonexistingFriendException("Cei 2 nu sunt prieteni!");
+            } else {
+                return StreamSupport.stream(getAllMessages().spliterator(), false)
+                        .filter(message -> message.getFrom().getId().equals(user.getId()) &&
+                                message.getTo().contains(getCurrentUser()) &&
+                                message.getDate().isAfter(date1) &&
+                                message.getDate().isBefore(date2)).collect(Collectors.toList());
+            }
+        }
+
+        throw new NonexistingFriendException("Cei 2 nu sunt prieteni!");
+    }
+
+    public List<Message> getAllReceivedMessagesByCurrentUserBetweenTwoDates(LocalDateTime date1, LocalDateTime date2) {
+        return StreamSupport.stream(getAllMessages().spliterator(), false).filter(message -> message.getTo().contains(getCurrentUser()) && message.getDate().isAfter(date1) &&
+                message.getDate().isBefore(date2)).collect(Collectors.toList());
+    }
+
+    public List<FriendshipDTO> getAllFriendshipsFromCurrentUserBetweenTwoDates(LocalDateTime date1, LocalDateTime date2) {
+        return getAllFriendshipsFromCurrentUser()
+                .stream()
+                .filter(friendshipDTO -> friendshipDTO.getDate().isAfter(date1) && friendshipDTO.getDate().isBefore(date2)).collect(Collectors.toList());
+    }
+
     public List<FriendshipDTO> getAllFriendshipsFromCurrentUser() {
         try {
             return getAllFriendships(getCurrentUser());
@@ -730,5 +891,4 @@ public class Controller implements Observable {
             throw new NonExistingUserException("Nu exista userul curent!");
         }
     }
-
 }

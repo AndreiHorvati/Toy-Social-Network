@@ -1,0 +1,51 @@
+#wrapper {
+    -fx-background-image: url("../images/43-436329_blue-purple-gradient-purple-blue-and-green.jpg");
+    -fx-background-size: stretch;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-alignment: center;
+}
+
+#vBox {
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-border-color: linear-gradient(to right top, #0c0537, #1c0c44, #2f0d51, #440c5c, #590766);
+    -fx-border-width: 0.8;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.7), 10, 0, 0, 1);
+    -fx-background-color: rgba(255, 255, 255, .1);
+}
+
+.button {
+    -fx-background-color: linear-gradient(to right top, #0c0537, #1c0c44, #2f0d51, #440c5c, #590766);
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 10px;
+}
+
+.button:hover {
+    -fx-background-color: #000066;
+}
+
+#scrollPane .viewport {
+    -fx-background-color: transparent;
+}
+
+#scrollPane {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:horizontal, .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .increment-button, .decrement-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0em;
+}

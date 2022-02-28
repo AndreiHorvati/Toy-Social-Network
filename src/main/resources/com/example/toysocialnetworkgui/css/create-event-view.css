@@ -1,0 +1,61 @@
+#wrapper {
+    -fx-background-image: url("../images/43-436329_blue-purple-gradient-purple-blue-and-green.jpg");
+    -fx-background-size: stretch;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-alignment: center;
+}
+
+.spinner {
+    -fx-border-radius: 50px;
+    -fx-background-color: rgba(255, 255, 255, .1);
+    -fx-background-radius: 50px;
+    -fx-text-fill: white;
+}
+
+.text-field {
+    -fx-border-radius: 50px;
+    -fx-background-color: rgba(255, 255, 255, .1);
+    -fx-background-radius: 50px;
+    -fx-text-fill: white;
+}
+
+
+#descriptionTextField {
+    -fx-border-radius: 10px;
+    -fx-background-color: rgba(255, 255, 255, .1);
+    -fx-background-radius: 10px;
+}
+
+.button {
+    -fx-background-color: "0037A5";
+    -fx-border-radius: 50px;
+    -fx-background-radius: 50px;
+}
+
+.button:hover {
+    -fx-background-color: #000066;
+}
+
+.date-picker {
+    -fx-border-radius: 10px;
+    -fx-background-color: rgba(255, 255, 255, .1);
+    -fx-background-radius: 10px;
+}
+
+.date-picker .text-field {
+    -fx-border-radius: 9px;
+    -fx-background-radius: 9px;
+}
+
+.date-picker .arrow-button {
+    -fx-background-color: rgba(255, 255, 255, .01);
+    -fx-background-radius: 0;
+}
+
+.date-picker .arrow-button .arrow {
+    -fx-background-color: white;
+}
+.date-picker .cell {
+    -fx-background-color: white;
+}

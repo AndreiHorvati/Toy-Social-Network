@@ -1,14 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="$CONTROLLER_NAME$"
-            prefHeight="400.0" prefWidth="600.0" >
+<HBox fx:id="mainHBox" maxWidth="600.0" prefWidth="600.0" stylesheets="@../css/replying-mode-view.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.toysocialnetworkgui.ReplyModeViewController">
+    <VBox fx:id="mainVBox" alignment="CENTER_LEFT" fillWidth="false" layoutX="6.0" layoutY="26.0" maxHeight="59.0" prefHeight="59.0" prefWidth="495.0">
+        <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
+            <Label prefHeight="26.0" prefWidth="110.0" text="Replying to:" textFill="#dddddd">
+                <font>
+                    <Font size="17.0" />
+                </font>
+            </Label>
+            <Label fx:id="nameLabel" text="Label" textFill="#dddddd" />
+        </HBox>
+        <Label fx:id="messageLabel" text="Label" textFill="#dddddd" />
+        <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+        </padding>
+    </VBox>
 
-</AnchorPane>
+    <VBox alignment="TOP_RIGHT" prefHeight="59.0" prefWidth="104.0">
+        <padding>
+            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0"/>
+        </padding>
+        <ImageView onMouseClicked="#closeReplyMode" fitHeight="21.0" fitWidth="25.0" pickOnBounds="true">
+            <Image url="@../images/close-x-icon-8.png"/>
+        </ImageView>
+    </VBox>
+</HBox>

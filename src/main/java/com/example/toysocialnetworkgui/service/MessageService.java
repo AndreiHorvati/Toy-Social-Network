@@ -5,6 +5,7 @@ import com.example.toysocialnetworkgui.model.User;
 import com.example.toysocialnetworkgui.repository.database.MessageDatabaseRepository;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MessageService {
     MessageDatabaseRepository repository;
@@ -31,7 +32,15 @@ public class MessageService {
         return repository.findOne(id);
     }
 
+    public Iterable<Message> findAll() {
+        return repository.findAll();
+    }
+
     public ArrayList<Long> getIdsForReplyAll(Long messageId, Long userId) {
         return repository.getIdsForReplyAll(messageId, userId);
+    }
+
+    public List<Long> getAllUsersIdsForConversations(User user) {
+        return repository.getAllUsersIdsForConversations(user.getId());
     }
 }

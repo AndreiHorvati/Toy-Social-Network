@@ -6,11 +6,14 @@ import com.example.toysocialnetworkgui.model.Page;
 import com.example.toysocialnetworkgui.model.User;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 
@@ -71,6 +74,8 @@ public class ProfileViewController {
     public void initFriendsList() {
         row = column = 0;
 
+        friendsList.getChildren().clear();
+
         page.getFriends().forEach(friend -> {
             try {
                 FriendProfileFromFriendsListController friendProfileFromFriendsListController;
@@ -123,7 +128,8 @@ public class ProfileViewController {
         friendButton.setText("Unfriend");
         friendButton.setOnAction(event -> {
             onRemoveFriendButtonClick();
-            mainViewController.loadProfile(page);
+
+            mainViewController.loadProfile(controller.getUserPage(page.getUser()));
         });
     }
 
@@ -147,11 +153,38 @@ public class ProfileViewController {
         controller.approveFriendRequestFromCurrentUser(username);
     }
 
+    private void onCreateEventButton() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(HelloApplication.class.getResource("Views/create-event-view.fxml"));
+
+            VBox root = (VBox) loader.load();
+            Stage dialogStage = new Stage();
+            Scene scene = new Scene(root);
+
+            dialogStage.setScene(scene);
+            dialogStage.show();
+
+            CreateEventViewController createEventViewController = loader.getController();
+            createEventViewController.setController(controller);
+            createEventViewController.setDialog(dialogStage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void setAcceptFriendRequestButton() {
         friendButton.setText("Accept");
         friendButton.setOnAction(event -> {
             onAcceptFriendRequestButton();
-            mainViewController.loadProfile(page);
+            mainViewController.loadProfile(controller.getUserPage(page.getUser()));
+        });
+    }
+
+    private void setCreateEventButton() {
+        friendButton.setText("Create Event");
+        friendButton.setOnAction(event -> {
+            onCreateEventButton();
         });
     }
 
@@ -162,22 +195,45 @@ public class ProfileViewController {
     }
 
     public void setFriendButton() {
-        User user = page.getUser();
-        String username = user.getUsername();
-        Friendship friendship = controller.getFriendshipBetweenCurrentUserAndAnotherUser(username);
+        if(controller.verifyIfUserIsCurrentUser(page.getUser())) {
+            setCreateEventButton();
+        } else {
+            User user = page.getUser();
+            String username = user.getUsername();
+            Friendship friendship = controller.getFriendshipBetweenCurrentUserAndAnotherUser(username);
 
-        if (friendship == null) {
-            setSendFriendRequestButton();
-        } else if (friendship.getStatus().equals("approved")) {
-            setRemoveFriendButton();
-        } else if (friendship.getStatus().equals("pending") &&
-                friendship.getId().getLeft().equals(controller.getCurrentUser().getId())) {
-            setRemoveFriendRequestButton();
-        } else if (friendship.getStatus().equals("pending") &&
-                friendship.getId().getRight().equals(controller.getCurrentUser().getId())) {
-            setAcceptFriendRequestButton();
-        } else if (friendship.getStatus().equals("rejected")) {
-            setRejectedFriendButton();
+            if (friendship == null) {
+                setSendFriendRequestButton();
+            } else if (friendship.getStatus().equals("approved")) {
+                setRemoveFriendButton();
+            } else if (friendship.getStatus().equals("pending") &&
+                    friendship.getId().getLeft().equals(controller.getCurrentUser().getId())) {
+                setRemoveFriendRequestButton();
+            } else if (friendship.getStatus().equals("pending") &&
+                    friendship.getId().getRight().equals(controller.getCurrentUser().getId())) {
+                setAcceptFriendRequestButton();
+            } else if (friendship.getStatus().equals("rejected")) {
+                setRejectedFriendButton();
+            }
         }
+    }
+
+    public void startConversation() {
+        FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("Views/chat-view.fxml"));
+        ChatViewController chatViewController;
+
+        mainViewController.loadMainView(loader);
+
+        chatViewController = loader.getController();
+        chatViewController.setController(controller);
+        chatViewController.initGUI();
+
+        chatViewController.setUser(page.getUser());
+        chatViewController.initConversation();
+        chatViewController.initScrollPane();
+        chatViewController.setAfterUserDetails();
+        chatViewController.setSearchBarEntries();
+
+        controller.addObserver(chatViewController);
     }
 }

@@ -2,12 +2,15 @@ package com.example.toysocialnetworkgui.repository.database;
 
 import com.example.toysocialnetworkgui.model.Message;
 import com.example.toysocialnetworkgui.model.User;
+import com.example.toysocialnetworkgui.model.UserIdForChatDTO;
 import com.example.toysocialnetworkgui.model.validators.Validator;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, Message> {
     public MessageDatabaseRepository(String url, String username, String password, Validator<Message> validator) {
@@ -109,11 +112,11 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
         ArrayList<Long> ids = new ArrayList<>();
 
         String sqlQueryGetReceivers = "select rm.receiver from \"ReceiverMessage\" as rm " +
-        "where rm.message_id = (select message_id from \"ReceiverMessage\" as rm where " +
-        "rm.id = ?) and rm.receiver != ?";
+                "where rm.message_id = (select message_id from \"ReceiverMessage\" as rm where " +
+                "rm.id = ?) and rm.receiver != ?";
 
         String sqlQueryGetSender = "select sm.sender from \"SenderMessage\" as sm inner join " +
-        "\"ReceiverMessage\" as rm on sm.id = rm.message_id where rm.id = ?";
+                "\"ReceiverMessage\" as rm on sm.id = rm.message_id where rm.id = ?";
 
         try (Connection connection = DriverManager.getConnection(url, username, password);
              PreparedStatement preparedStatementReceivers = connection.prepareStatement(sqlQueryGetReceivers);
@@ -124,7 +127,7 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
 
             ResultSet resultSetReceivers = preparedStatementReceivers.executeQuery();
 
-            while(resultSetReceivers.next()) {
+            while (resultSetReceivers.next()) {
                 ids.add(resultSetReceivers.getLong("receiver"));
             }
 
@@ -132,7 +135,7 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
 
             ResultSet resultSetSender = preparedStatementSender.executeQuery();
 
-            if(resultSetSender.next()) {
+            if (resultSetSender.next()) {
                 ids.add(resultSetSender.getLong("sender"));
             }
 
@@ -166,15 +169,69 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
         return messages;
     }
 
+    public List<Long> getAllUsersIdsForConversations(Long userId) {
+        String sqlSenderQuery = "select s.sender_id, s.date from (select sm.sender as sender_id, sm.date as date " +
+                "from \"ReceiverMessage\" as rm inner join " +
+                "\"SenderMessage\" as sm on RM.message_id = sm.id " +
+                "inner join \"User\" as s on sm.sender = s.id " +
+                "inner join \"User\" as r on rm.receiver = r.id " +
+                "where sm.sender = ? or rm.receiver = ? " +
+                "order by sm.date) as s where sender_id != ?";
+
+        String sqlReceiverQuery = "select s.receiver_id, s.date from (select rm.receiver as receiver_id, sm.date as date " +
+                "from \"ReceiverMessage\" as rm inner join " +
+                "\"SenderMessage\" as sm on RM.message_id = sm.id " +
+                "inner join \"User\" as s on sm.sender = s.id " +
+                "inner join \"User\" as r on rm.receiver = r.id " +
+                "where sm.sender = ? or rm.receiver = ? " +
+                "order by sm.date) as s where receiver_id != ?";
+
+        List<UserIdForChatDTO> dtos = new ArrayList<>();
+
+        try (Connection connection = DriverManager.getConnection(url, username, password)) {
+            PreparedStatement preparedStatementSender = connection.prepareStatement(sqlSenderQuery);
+            PreparedStatement preparedStatementReceiver = connection.prepareStatement(sqlReceiverQuery);
+
+            preparedStatementSender.setLong(1, userId);
+            preparedStatementSender.setLong(2, userId);
+            preparedStatementSender.setLong(3, userId);
+
+            preparedStatementReceiver.setLong(1, userId);
+            preparedStatementReceiver.setLong(2, userId);
+            preparedStatementReceiver.setLong(3, userId);
+
+            ResultSet resultSetSender = preparedStatementSender.executeQuery();
+            ResultSet resultSetReceiver = preparedStatementReceiver.executeQuery();
+
+            while (resultSetSender.next()) {
+                Long id = resultSetSender.getLong("sender_id");
+                LocalDateTime date = resultSetSender.getTimestamp("date").toLocalDateTime();
+
+                dtos.add(new UserIdForChatDTO(id, date));
+            }
+
+            while (resultSetReceiver.next()) {
+                Long id = resultSetReceiver.getLong("receiver_id");
+                LocalDateTime date = resultSetReceiver.getTimestamp("date").toLocalDateTime();
+
+                dtos.add(new UserIdForChatDTO(id, date));
+            }
+
+            return dtos.stream().sorted((o1, o2) -> (o1.getDate().compareTo(o2.getDate())) * -1).map(UserIdForChatDTO::getId).distinct().collect(Collectors.toList());
+        } catch (SQLException throwables) {
+            throw new DatabaseException("Eroare la baza de date!");
+        }
+    }
+
     public ArrayList<Message> getConversationBetween2Users(User user1, User user2) {
         String sqlQueryConversation = "select s.username as sender_username, r.username as receiver_username, rm.id as message_id, sm.sender as sender_id, s.first_name as sender_first_name, s.last_name as sender_last_name, rm.receiver as receiver_id, " +
                 "r.first_name as receiver_first_name, r.last_name as receiver_last_name, sm.message, sm.date, sm.reply from \"ReceiverMessage\" as rm inner join " +
-        "\"SenderMessage\" as sm on RM.message_id = sm.id " +
-        "inner join \"User\" as s on sm.sender = s.id " +
-        "inner join \"User\" as r on rm.receiver = r.id " +
-        "where (sm.sender = ? and rm.receiver = ?) or " +
+                "\"SenderMessage\" as sm on RM.message_id = sm.id " +
+                "inner join \"User\" as s on sm.sender = s.id " +
+                "inner join \"User\" as r on rm.receiver = r.id " +
+                "where (sm.sender = ? and rm.receiver = ?) or " +
                 "(sm.sender = ? and rm.receiver = ?) order by " +
-        "sm.date";
+                "sm.date";
 
         ArrayList<Message> conversation = new ArrayList<>();
 
@@ -188,7 +245,7 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            while(resultSet.next()) {
+            while (resultSet.next()) {
                 conversation.add(getMessageFromResultSet(resultSet));
             }
 
@@ -214,7 +271,7 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
         try (Connection connection = DriverManager.getConnection(url, username, password)) {
             PreparedStatement preparedStatementSenderMessage;
 
-            if(entity.getReply() == null) {
+            if (entity.getReply() == null) {
                 preparedStatementSenderMessage = connection.prepareStatement(sqlQuerySendSenderMessageReplyNull);
 
                 preparedStatementSenderMessage.setLong(1, entity.getFrom().getId());
@@ -246,7 +303,6 @@ public class MessageDatabaseRepository extends AbstractDatabaseRepository<Long, 
 
             return null;
         } catch (SQLException throwables) {
-            System.out.println(throwables.getMessage());
             throw new DatabaseException("Eroare la baza de date!");
         }
     }

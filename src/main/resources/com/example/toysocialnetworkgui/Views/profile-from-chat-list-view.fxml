@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="$CONTROLLER_NAME$"
-            prefHeight="400.0" prefWidth="600.0" >
-
+<AnchorPane onMouseClicked="#changeUser" prefHeight="50.0" prefWidth="197.0" stylesheets="@../css/profile-from-chat-list-view.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.toysocialnetworkgui.ProfileFromChatListViewController">
+    <HBox fx:id="wrapper" alignment="CENTER" layoutY="6.0" prefHeight="65.0" prefWidth="197.0">
+        <ImageView fx:id="profilePicture" fitHeight="45.0" fitWidth="43.0" pickOnBounds="true">
+            <HBox.margin>
+                <Insets left="10.0" />
+            </HBox.margin>
+            <Image url="@../images/profile-2398782_960_720.png" />
+        </ImageView>
+        <VBox alignment="CENTER" prefHeight="100.0" prefWidth="155.0">
+            <Label fx:id="nameLabel" text="Label" textFill="WHITE">
+            <padding>
+               <Insets top="3.0" />
+            </padding></Label>
+            <Label text="Label" textFill="WHITE" />
+        </VBox>
+    </HBox>
 </AnchorPane>

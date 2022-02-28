@@ -1,0 +1,8 @@
+#mainHBox {
+    -fx-background-color: rgba(255, 255, 255, .3);
+    -fx-border-radius: 15px;
+    -fx-background-radius: 15px;
+    -fx-border-color: linear-gradient(to right top, #0c0537, #1c0c44, #2f0d51, #440c5c, #590766);
+    -fx-border-width: 0.8;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.7), 10, 0, 0, 1);
+}

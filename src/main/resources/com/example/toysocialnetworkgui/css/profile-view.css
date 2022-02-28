@@ -12,11 +12,11 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.7), 10, 0, 0, 1);
 }
 
-#scrollPane {
+#friendsList {
     -fx-background-color: transparent;
 }
 
-#friendsList {
+#scrollPane {
     -fx-background-color: transparent;
 }
 
