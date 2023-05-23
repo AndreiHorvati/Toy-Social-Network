@@ -29,9 +29,6 @@ Simple Social Media application to keep in touch with all your friends.
 ### Login Page
 <img width="401" alt="Screenshot 2022-02-28 at 19 36 19" src="https://user-images.githubusercontent.com/34892529/156031988-4306f8cf-4178-4b90-81b6-94ea016d70d8.png">
 
-### User Profile
-<img width="1001" alt="Screenshot 2022-02-28 at 19 37 38" src="https://user-images.githubusercontent.com/34892529/156032009-39350cff-df4a-46ff-ba90-84e5e12878c1.png">
-
 ### Friend Requests Menu
 <img width="1001" alt="Screenshot 2022-02-28 at 19 38 15" src="https://user-images.githubusercontent.com/34892529/156032022-0d427d9b-8d74-4f3c-bf70-ed62b9725a8e.png">
 
